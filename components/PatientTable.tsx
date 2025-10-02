@@ -332,14 +332,14 @@ export function PatientTable({ initialPatients }: PatientTableProps) {
                     {format(new Date(patient.created_at), 'MMM d, yyyy')}
                   </td>
                   <td className="px-6 py-4">
-                    <Link href={`/patients/${patient.id}`}>
-                      <motion.button
+                    <Link href={`/patients/${patient.id}`} className="inline-block">
+                      <motion.div
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition"
+                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition cursor-pointer inline-flex items-center justify-center"
                       >
                         <Eye className="w-5 h-5" />
-                      </motion.button>
+                      </motion.div>
                     </Link>
                   </td>
                 </motion.tr>
