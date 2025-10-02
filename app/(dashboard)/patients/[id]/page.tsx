@@ -49,9 +49,10 @@ async function getPatientProfile(patientId: string) {
 export default async function PatientProfilePage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const data = await getPatientProfile(params.id)
+  const { id } = await params
+  const data = await getPatientProfile(id)
 
   if (!data) {
     notFound()
