@@ -11,17 +11,31 @@ async function getPatientProfile(patientId: string) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) {
+    console.error('[Patient Profile] No user found in session')
+    return null
+  }
+
+  console.log('[Patient Profile] Fetching patient:', patientId, 'for user:', user.id)
 
   // Get patient details
-  const { data: patient } = await supabase
+  const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('*')
     .eq('id', patientId)
     .eq('user_id', user.id)
     .single()
 
-  if (!patient) return null
+  if (patientError) {
+    console.error('[Patient Profile] Error fetching patient:', patientError)
+  }
+
+  if (!patient) {
+    console.error('[Patient Profile] Patient not found or does not belong to user')
+    return null
+  }
+
+  console.log('[Patient Profile] Patient found:', (patient as any).full_name)
 
   // Get appointments for this patient
   const { data: appointments } = await supabase
