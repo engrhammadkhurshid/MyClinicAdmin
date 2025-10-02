@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { Stethoscope, Mail, Lock, Eye, EyeOff, User, Phone, Briefcase } from 'lucide-react'
-import { TurnstileWidget } from '@/components/Turnstile'
 import toast, { Toaster } from 'react-hot-toast'
 
 export default function SignupPage() {
@@ -22,7 +21,6 @@ export default function SignupPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -36,13 +34,6 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-
-    // Check for Turnstile token
-    if (!turnstileToken) {
-      setError('Please complete the CAPTCHA verification')
-      toast.error('Please complete the CAPTCHA verification')
-      return
-    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -58,24 +49,6 @@ export default function SignupPage() {
     const loadingToast = toast.loading('Creating your account...')
 
     try {
-      // Verify turnstile token on server
-      const verifyResponse = await fetch('/api/verify-turnstile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: turnstileToken }),
-      })
-
-      if (!verifyResponse.ok) {
-        toast.error('CAPTCHA verification failed. Please try again.', { id: loadingToast })
-        setError('CAPTCHA verification failed')
-        setLoading(false)
-        setTurnstileToken('') // Reset token
-        return
-      }
-
-      // Continue with signup...
-      // Sign up the user with Supabase Auth
-      // The database trigger will automatically create the profile with basic info
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -382,20 +355,11 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Cloudflare Turnstile CAPTCHA */}
-            <TurnstileWidget
-              onSuccess={(token) => setTurnstileToken(token)}
-              onError={() => {
-                toast.error('CAPTCHA verification failed. Please try again.')
-                setTurnstileToken('')
-              }}
-            />
-
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={!turnstileToken || loading}
+              disabled={loading}
               className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {loading ? 'Creating account...' : 'Create Account'}

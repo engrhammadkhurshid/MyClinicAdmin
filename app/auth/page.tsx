@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Stethoscope, Mail, Lock, Eye, EyeOff, User, Phone, Briefcase } from 'lucide-react'
-import { TurnstileWidget } from '@/components/Turnstile'
 import toast, { Toaster } from 'react-hot-toast'
 
 type TabType = 'signin' | 'signup'
@@ -119,7 +118,6 @@ function SignInForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -129,32 +127,10 @@ function SignInForm() {
     e.preventDefault()
     setError('')
 
-    // CAPTCHA temporarily disabled
-    // if (!turnstileToken) {
-    //   setError('Please complete the CAPTCHA verification')
-    //   toast.error('Please complete the CAPTCHA verification')
-    //   return
-    // }
-
     setLoading(true)
     const loadingToast = toast.loading('Signing you in...')
 
     try {
-      // CAPTCHA verification temporarily disabled
-      // const verifyResponse = await fetch('/api/verify-turnstile', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token: turnstileToken }),
-      // })
-
-      // if (!verifyResponse.ok) {
-      //   toast.error('CAPTCHA verification failed. Please try again.', { id: loadingToast })
-      //   setError('CAPTCHA verification failed')
-      //   setLoading(false)
-      //   setTurnstileToken('')
-      //   return
-      // }
-
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -248,15 +224,6 @@ function SignInForm() {
           </Link>
         </div>
 
-        {/* CAPTCHA temporarily disabled */}
-        {/* <TurnstileWidget
-          onSuccess={(token) => setTurnstileToken(token)}
-          onError={() => {
-            toast.error('CAPTCHA verification failed. Please try again.')
-            setTurnstileToken('')
-          }}
-        /> */}
-
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -285,7 +252,6 @@ function SignUpForm() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -299,13 +265,6 @@ function SignUpForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-
-    // CAPTCHA temporarily disabled
-    // if (!turnstileToken) {
-    //   setError('Please complete the CAPTCHA verification')
-    //   toast.error('Please complete the CAPTCHA verification')
-    //   return
-    // }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -321,21 +280,6 @@ function SignUpForm() {
     const loadingToast = toast.loading('Creating your account...')
 
     try {
-      // CAPTCHA verification temporarily disabled
-      // const verifyResponse = await fetch('/api/verify-turnstile', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ token: turnstileToken }),
-      // })
-
-      // if (!verifyResponse.ok) {
-      //   toast.error('CAPTCHA verification failed. Please try again.', { id: loadingToast })
-      //   setError('CAPTCHA verification failed')
-      //   setLoading(false)
-      //   setTurnstileToken('')
-      //   return
-      // }
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -617,16 +561,6 @@ function SignUpForm() {
             </div>
           </div>
         </div>
-
-        {/* CAPTCHA temporarily disabled
-        <TurnstileWidget
-          onSuccess={(token) => setTurnstileToken(token)}
-          onError={() => {
-            toast.error('CAPTCHA verification failed. Please try again.')
-            setTurnstileToken('')
-          }}
-        />
-        */}
 
         <motion.button
           whileHover={{ scale: 1.02 }}

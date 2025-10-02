@@ -6,14 +6,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { Stethoscope, Mail, Lock, Eye, EyeOff } from 'lucide-react'
-import { TurnstileWidget } from '@/components/Turnstile'
 import toast, { Toaster } from 'react-hot-toast'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -23,32 +21,10 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    // Check for Turnstile token
-    if (!turnstileToken) {
-      setError('Please complete the CAPTCHA verification')
-      toast.error('Please complete the CAPTCHA verification')
-      return
-    }
-
     setLoading(true)
     const loadingToast = toast.loading('Signing you in...')
 
     try {
-      // Verify turnstile token on server
-      const verifyResponse = await fetch('/api/verify-turnstile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: turnstileToken }),
-      })
-
-      if (!verifyResponse.ok) {
-        toast.error('CAPTCHA verification failed. Please try again.', { id: loadingToast })
-        setError('CAPTCHA verification failed')
-        setLoading(false)
-        setTurnstileToken('') // Reset token
-        return
-      }
-
       // Continue with login
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -162,20 +138,11 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Cloudflare Turnstile CAPTCHA */}
-            <TurnstileWidget
-              onSuccess={(token) => setTurnstileToken(token)}
-              onError={() => {
-                toast.error('CAPTCHA verification failed. Please try again.')
-                setTurnstileToken('')
-              }}
-            />
-
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={!turnstileToken || loading}
+              disabled={loading}
               className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}
