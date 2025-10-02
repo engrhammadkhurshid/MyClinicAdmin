@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Search, Filter, Download, Eye } from 'lucide-react'
+import { Search, Filter, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
@@ -34,6 +34,7 @@ interface UserProfile {
 }
 
 export function PatientTable({ initialPatients }: PatientTableProps) {
+  const router = useRouter()
   const [patients, setPatients] = useState(initialPatients)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterLabel, setFilterLabel] = useState<string>('all')
@@ -287,9 +288,6 @@ export function PatientTable({ initialPatients }: PatientTableProps) {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                   Registered
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -298,7 +296,8 @@ export function PatientTable({ initialPatients }: PatientTableProps) {
                   key={patient.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="hover:bg-gray-50 transition"
+                  onClick={() => router.push(`/patients/${patient.id}`)}
+                  className="hover:bg-primary-50 cursor-pointer transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">{patient.full_name}</div>
@@ -330,17 +329,6 @@ export function PatientTable({ initialPatients }: PatientTableProps) {
                   </td>
                   <td className="px-6 py-4 text-gray-600">
                     {format(new Date(patient.created_at), 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link href={`/patients/${patient.id}`} className="inline-block">
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition cursor-pointer inline-flex items-center justify-center"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </motion.div>
-                    </Link>
                   </td>
                 </motion.tr>
               ))}
