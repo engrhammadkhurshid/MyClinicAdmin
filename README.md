@@ -1098,10 +1098,11 @@ Need help? Have questions? Found a bug? We're here to assist!
 
 ### Documentation
 
-- 📖 **User Guide**: See [QUICKSTART.md](./QUICKSTART.md)
-- 🚀 **Deployment Guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md)
-- 🔧 **Troubleshooting**: See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-- 🔒 **Security Guide**: See [SECURITY_DEPLOYMENT_CHECKLIST.md](./SECURITY_DEPLOYMENT_CHECKLIST.md)
+- 📖 **User Guide**: See [docs/setup/QUICKSTART.md](./docs/setup/QUICKSTART.md)
+- 🚀 **Deployment Guide**: See [docs/deployment/DEPLOYMENT.md](./docs/deployment/DEPLOYMENT.md)
+- 🔧 **Troubleshooting**: See [docs/troubleshooting/TROUBLESHOOTING.md](./docs/troubleshooting/TROUBLESHOOTING.md)
+- 🔒 **Security Guide**: See [docs/deployment/SECURITY_DEPLOYMENT_CHECKLIST.md](./docs/deployment/SECURITY_DEPLOYMENT_CHECKLIST.md)
+- 📚 **Full Documentation**: See [docs/README.md](./docs/README.md)
 
 ### Response Time
 
