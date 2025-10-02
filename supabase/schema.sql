@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.patients (
     address TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT,
+    source TEXT DEFAULT 'Walk In',
     labels TEXT[] DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL

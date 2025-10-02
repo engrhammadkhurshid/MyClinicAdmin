@@ -6,12 +6,12 @@ import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 const labels = ['New Patient', 'Follow-up', 'Critical', 'Regular', 'VIP', 'Diabetes', 'Hypertension']
 
 export default function NewPatientPage() {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -28,15 +28,19 @@ export default function NewPatientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
+
+    const loadingToast = toast.loading('Creating patient record...')
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        toast.error('You must be logged in to add patients', { id: loadingToast })
+        return
+      }
 
       const { error: insertError } = await supabase
         .from('patients')
@@ -52,12 +56,16 @@ export default function NewPatientPage() {
           labels: formData.labels,
         } as any)
 
-      if (insertError) throw insertError
+      if (insertError) {
+        toast.error(`Failed to create patient: ${insertError.message}`, { id: loadingToast })
+        return
+      }
 
+      toast.success('Patient added successfully!', { id: loadingToast })
       router.push('/patients')
       router.refresh()
     } catch (error: any) {
-      setError(error.message || 'Failed to create patient')
+      toast.error(error.message || 'An unexpected error occurred', { id: loadingToast })
     } finally {
       setLoading(false)
     }
@@ -91,12 +99,6 @@ export default function NewPatientPage() {
             <p className="text-gray-600 text-sm">Fill in the patient details below</p>
           </div>
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}

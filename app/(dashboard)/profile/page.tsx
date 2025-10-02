@@ -7,12 +7,11 @@ import { Database } from '@/types/database.types'
 import { motion } from 'framer-motion'
 import { User, Mail, Phone, Lock, LogOut, Clock } from 'lucide-react'
 import { formatPKTShort } from '@/lib/timezone'
+import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -82,7 +81,7 @@ export default function ProfilePage() {
       }
     } catch (error: any) {
       console.error('Load profile error:', error)
-      setError(error.message || 'Failed to load profile')
+      toast.error(error.message || 'Failed to load profile')
     } finally {
       setLoading(false)
     }
@@ -95,16 +94,19 @@ export default function ProfilePage() {
 
   const handleUpdateClinic = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
     setUpdating(true)
+
+    const loadingToast = toast.loading('Updating clinic information...')
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        toast.error('You must be logged in', { id: loadingToast })
+        return
+      }
 
       console.log('Updating clinic for user:', user.id)
       console.log('Clinic data to update:', { clinic_name: profile.clinicName, clinic_type: profile.clinicType })
@@ -153,17 +155,17 @@ export default function ProfilePage() {
 
       if (updateError) {
         console.error('Supabase error:', updateError)
-        throw updateError
+        toast.error(`Failed to update: ${updateError.message}`, { id: loadingToast })
+        return
       }
 
-      setSuccess('Clinic information updated successfully!')
-      setTimeout(() => setSuccess(''), 3000)
+      toast.success('Clinic information updated successfully!', { id: loadingToast })
       
       // Reload profile to confirm changes
       await loadProfile()
     } catch (error: any) {
       console.error('Update error:', error)
-      setError(error.message || 'Failed to update clinic information')
+      toast.error(error.message || 'An unexpected error occurred', { id: loadingToast })
     } finally {
       setUpdating(false)
     }
@@ -171,16 +173,19 @@ export default function ProfilePage() {
 
   const handleUpdateAssistant = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
     setUpdating(true)
+
+    const loadingToast = toast.loading('Updating profile information...')
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        toast.error('You must be logged in', { id: loadingToast })
+        return
+      }
 
       console.log('Updating profile for user:', user.id)
       console.log('Profile data to update:', { name: profile.name, phone: profile.phone })
@@ -228,17 +233,17 @@ export default function ProfilePage() {
 
       if (updateError) {
         console.error('Supabase error:', updateError)
-        throw updateError
+        toast.error(`Failed to update: ${updateError.message}`, { id: loadingToast })
+        return
       }
 
-      setSuccess('Manager information updated successfully!')
-      setTimeout(() => setSuccess(''), 3000)
+      toast.success('Profile updated successfully!', { id: loadingToast })
       
       // Reload profile to confirm changes
       await loadProfile()
     } catch (error: any) {
       console.error('Update error:', error)
-      setError(error.message || 'Failed to update manager information')
+      toast.error(error.message || 'An unexpected error occurred', { id: loadingToast })
     } finally {
       setUpdating(false)
     }
@@ -247,45 +252,48 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
+      toast.success('Logged out successfully')
       router.push('/auth/login')
     } catch (error: any) {
-      setError('Failed to logout')
+      toast.error('Failed to logout')
     }
   }
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match')
+      toast.error('New passwords do not match')
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters')
+      toast.error('Password must be at least 6 characters')
       return
     }
 
     setUpdating(true)
+
+    const loadingToast = toast.loading('Changing password...')
 
     try {
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword,
       })
 
-      if (error) throw error
+      if (error) {
+        toast.error(`Failed to change password: ${error.message}`, { id: loadingToast })
+        return
+      }
 
-      setSuccess('Password changed successfully!')
+      toast.success('Password changed successfully!', { id: loadingToast })
       setPasswordData({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       })
-      setTimeout(() => setSuccess(''), 3000)
     } catch (error: any) {
-      setError(error.message || 'Failed to change password')
+      toast.error(error.message || 'An unexpected error occurred', { id: loadingToast })
     } finally {
       setUpdating(false)
     }
@@ -306,27 +314,6 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Profile Settings</h1>
         <p className="text-gray-600">Manage your account information and preferences</p>
       </div>
-
-      {/* Success/Error Messages */}
-      {success && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"
-        >
-          {success}
-        </motion.div>
-      )}
-
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600"
-        >
-          {error}
-        </motion.div>
-      )}
 
       <div className="space-y-6">
         {/* Clinic Information - Prominent */}

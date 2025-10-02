@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 interface AppointmentFormProps {
   patientId?: string
@@ -16,7 +17,6 @@ const labels = ['New Patient', 'Follow-up', 'Critical', 'Regular', 'VIP']
 
 export function AppointmentForm({ patientId, onClose }: AppointmentFormProps) {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,15 +40,19 @@ export function AppointmentForm({ patientId, onClose }: AppointmentFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     setLoading(true)
+
+    const loadingToast = toast.loading('Creating appointment...')
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        toast.error('You must be logged in to create appointments', { id: loadingToast })
+        return
+      }
 
       let finalPatientId = formData.patientId
 
@@ -70,12 +74,16 @@ export function AppointmentForm({ patientId, onClose }: AppointmentFormProps) {
           .select()
           .single()
 
-        if (patientError) throw patientError
+        if (patientError) {
+          toast.error(`Failed to create patient: ${patientError.message}`, { id: loadingToast })
+          return
+        }
         finalPatientId = (newPatient as any).id
       }
 
       if (!finalPatientId) {
-        throw new Error('Please select or create a patient')
+        toast.error('Please select or create a patient', { id: loadingToast })
+        return
       }
 
       // Create appointment
@@ -93,12 +101,16 @@ export function AppointmentForm({ patientId, onClose }: AppointmentFormProps) {
           status: 'scheduled',
         } as any)
 
-      if (appointmentError) throw appointmentError
+      if (appointmentError) {
+        toast.error(`Failed to create appointment: ${appointmentError.message}`, { id: loadingToast })
+        return
+      }
 
+      toast.success('Appointment created successfully!', { id: loadingToast })
       router.push('/appointments')
       router.refresh()
     } catch (error: any) {
-      setError(error.message || 'Failed to create appointment')
+      toast.error(error.message || 'An unexpected error occurred', { id: loadingToast })
     } finally {
       setLoading(false)
     }
@@ -130,12 +142,6 @@ export function AppointmentForm({ patientId, onClose }: AppointmentFormProps) {
           </button>
         )}
       </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Patient Information */}
