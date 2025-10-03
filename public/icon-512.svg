@@ -1,0 +1,16 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#grad)" rx="102.4"/>
+  <g>
+    <circle cx="256" cy="190" r="60" fill="white" opacity="0.9"/>
+    <path d="M 256 250 L 256 285 M 210 300 L 256 285 L 302 300 M 180 315 Q 256 345 332 315" 
+          stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.9"/>
+    <text x="256" y="420" font-family="Arial, sans-serif" font-size="64" 
+          fill="white" text-anchor="middle" font-weight="600">MyClinic</text>
+  </g>
+</svg>
