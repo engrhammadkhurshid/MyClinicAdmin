@@ -112,9 +112,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // List of public routes that don't require authentication
-  const publicRoutes = ['/', '/auth', '/auth/signin', '/auth/login', '/auth/signup', '/auth/forgot-password']
+  const publicRoutes = ['/', '/auth/signin', '/auth/login', '/auth/signup', '/auth/forgot-password']
   const isPublicRoute = publicRoutes.some(route => 
-    request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
+    request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith('/auth/')
   )
 
   // Redirect to signin if not authenticated and trying to access protected route
@@ -122,8 +122,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
-  // Redirect to dashboard if authenticated and trying to access public routes (except forgot-password)
-  if (user && isPublicRoute && request.nextUrl.pathname !== '/auth/forgot-password') {
+  // Redirect to dashboard if authenticated and trying to access landing page or auth routes (except forgot-password)
+  if (user && (request.nextUrl.pathname === '/' || (request.nextUrl.pathname.startsWith('/auth/') && request.nextUrl.pathname !== '/auth/forgot-password'))) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

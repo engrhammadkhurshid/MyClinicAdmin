@@ -3,8 +3,9 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, Phone, Mail, MapPin, FileText } from 'lucide-react'
 import dayjs from 'dayjs'
+import { extractIdFromSlug, createPatientSlug } from '@/lib/slugify'
 
-async function getPatientProfile(patientId: string) {
+async function getPatientProfile(slug: string) {
   const supabase = await createServerComponentClient()
   
   const {
@@ -16,32 +17,49 @@ async function getPatientProfile(patientId: string) {
     return null
   }
 
-  console.log('[Patient Profile] Fetching patient:', patientId, 'for user:', user.id)
-
-  // Get patient details
-  const { data: patient, error: patientError } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('id', patientId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (patientError) {
-    console.error('[Patient Profile] Error fetching patient:', patientError)
-  }
-
-  if (!patient) {
-    console.error('[Patient Profile] Patient not found or does not belong to user')
+  // First, try to extract ID from slug
+  const shortId = extractIdFromSlug(slug)
+  
+  if (!shortId) {
+    console.error('[Patient Profile] Invalid slug format:', slug)
     return null
   }
 
-  console.log('[Patient Profile] Patient found:', (patient as any).full_name)
+  console.log('[Patient Profile] Extracted ID from slug:', shortId)
+
+  // Get all patients for this user and find the one matching the short ID
+  const { data: patients, error: patientsError } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('user_id', user.id)
+
+  if (patientsError) {
+    console.error('[Patient Profile] Error fetching patients:', patientsError)
+    return null
+  }
+
+  // Find patient whose ID starts with the short ID from the slug
+  const patient = (patients as any[])?.find((p: any) => p.id.startsWith(shortId))
+
+  if (!patient) {
+    console.error('[Patient Profile] Patient not found for slug:', slug)
+    return null
+  }
+
+  // Verify the slug matches the expected format (optional redirect if wrong format)
+  const expectedSlug = createPatientSlug(patient.full_name, patient.id)
+  if (slug !== expectedSlug) {
+    console.warn('[Patient Profile] Slug mismatch. Expected:', expectedSlug, 'Got:', slug)
+    // Continue anyway for backward compatibility
+  }
+
+  console.log('[Patient Profile] Patient found:', patient.full_name)
 
   // Get appointments for this patient
   const { data: appointments } = await supabase
     .from('appointments')
     .select('*')
-    .eq('patient_id', patientId)
+    .eq('patient_id', patient.id)
     .eq('user_id', user.id)
     .order('appointment_date', { ascending: false })
 
@@ -49,7 +67,7 @@ async function getPatientProfile(patientId: string) {
   const { data: attachments } = await supabase
     .from('attachments')
     .select('*')
-    .eq('patient_id', patientId)
+    .eq('patient_id', patient.id)
     .eq('user_id', user.id)
     .order('uploaded_at', { ascending: false })
 
@@ -63,10 +81,10 @@ async function getPatientProfile(patientId: string) {
 export default async function PatientProfilePage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
 }) {
-  const { id } = await params
-  const data = await getPatientProfile(id)
+  const { slug } = await params
+  const data = await getPatientProfile(slug)
 
   if (!data) {
     notFound()

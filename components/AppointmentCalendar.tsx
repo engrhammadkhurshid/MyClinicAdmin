@@ -8,6 +8,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import { ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
 import Link from 'next/link'
 import { formatTimePKT, toPKT, getCurrentPKT } from '@/lib/timezone'
+import { createPatientSlug } from '@/lib/slugify'
 
 // Extend dayjs with plugins
 dayjs.extend(isSameOrBefore)
@@ -78,28 +79,31 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
         <h3 className="text-xl font-bold mb-4">Today&apos;s Appointments</h3>
         {todaysAppointments.length > 0 ? (
           <div className="space-y-3">
-            {todaysAppointments.map((apt) => (
-              <Link key={apt.id} href={`/patients/${apt.patient_id}`}>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <User className="w-5 h-5" />
-                      <div>
-                        <p className="font-semibold">{apt.patient_name}</p>
-                        <p className="text-sm text-white/80">{apt.visit_type}</p>
+            {todaysAppointments.map((apt) => {
+              const patientSlug = createPatientSlug(apt.patient_name, apt.patient_id)
+              return (
+                <Link key={apt.id} href={`/patients/${patientSlug}`}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <User className="w-5 h-5" />
+                        <div>
+                          <p className="font-semibold">{apt.patient_name}</p>
+                          <p className="text-sm text-white/80">{apt.visit_type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock className="w-4 h-4" />
+                        {formatTimePKT(apt.appointment_date)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4" />
-                      {formatTimePKT(apt.appointment_date)}
-                    </div>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
+                  </motion.div>
+                </Link>
+              )
+            })}
           </div>
         ) : (
           <p className="text-white/80">No appointments scheduled for today</p>
@@ -190,26 +194,29 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
               Appointments on {dayjs(selectedDate).format('MMMM D, YYYY')}
             </h4>
             <div className="space-y-2">
-              {selectedDateAppointments.map((apt) => (
-                <Link key={apt.id} href={`/patients/${apt.patient_id}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <User className="w-4 h-4 text-gray-600" />
-                      <div>
-                        <p className="font-medium text-gray-900">{apt.patient_name}</p>
-                        <p className="text-sm text-gray-600">{apt.visit_type}</p>
+              {selectedDateAppointments.map((apt) => {
+                const patientSlug = createPatientSlug(apt.patient_name, apt.patient_id)
+                return (
+                  <Link key={apt.id} href={`/patients/${patientSlug}`}>
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <User className="w-4 h-4 text-gray-600" />
+                        <div>
+                          <p className="font-medium text-gray-900">{apt.patient_name}</p>
+                          <p className="text-sm text-gray-600">{apt.visit_type}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
-                      {formatTimePKT(apt.appointment_date)}
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        {formatTimePKT(apt.appointment_date)}
+                      </div>
+                    </motion.div>
+                  </Link>
+                )
+              })}
             </div>
           </motion.div>
         )}

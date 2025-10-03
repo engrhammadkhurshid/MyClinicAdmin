@@ -7,6 +7,7 @@ import { Search, Filter, Download } from 'lucide-react'
 import dayjs from 'dayjs'
 import { createClient } from '@/lib/supabase/client'
 import { formatPKTShort, formatDatePKT, getCurrentPKT } from '@/lib/timezone'
+import { createPatientSlug } from '@/lib/slugify'
 
 interface Patient {
   id: string
@@ -228,7 +229,10 @@ export function PatientTable({ initialPatients }: PatientTableProps) {
                   key={patient.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  onClick={() => router.push(`/patients/${patient.id}`)}
+                  onClick={() => {
+                    const slug = createPatientSlug(patient.full_name, patient.id)
+                    router.push(`/patients/${slug}`)
+                  }}
                   className="hover:bg-primary-50 cursor-pointer transition-colors"
                 >
                   <td className="px-6 py-4">
