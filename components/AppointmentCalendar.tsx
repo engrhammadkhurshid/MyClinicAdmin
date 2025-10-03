@@ -2,23 +2,16 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  format, 
-  startOfMonth, 
-  endOfMonth, 
-  startOfWeek, 
-  endOfWeek, 
-  addDays, 
-  isSameMonth, 
-  isSameDay, 
-  isToday,
-  addMonths,
-  subMonths,
-  parseISO
-} from 'date-fns'
+import dayjs from 'dayjs'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import { ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
 import Link from 'next/link'
 import { formatTimePKT, toPKT, getCurrentPKT } from '@/lib/timezone'
+
+// Extend dayjs with plugins
+dayjs.extend(isSameOrBefore)
+dayjs.extend(isSameOrAfter)
 
 interface Appointment {
   id: string
@@ -36,10 +29,10 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
   const [currentMonth, setCurrentMonth] = useState(getCurrentPKT())
   const [selectedDate, setSelectedDate] = useState<Date | null>(getCurrentPKT())
 
-  const monthStart = startOfMonth(currentMonth)
-  const monthEnd = endOfMonth(monthStart)
-  const startDate = startOfWeek(monthStart)
-  const endDate = endOfWeek(monthEnd)
+  const monthStart = dayjs(currentMonth).startOf('month')
+  const monthEnd = dayjs(monthStart).endOf('month')
+  const startDate = dayjs(monthStart).startOf('week')
+  const endDate = dayjs(monthEnd).endOf('week')
 
   const dateFormat = 'MMMM yyyy'
   const dayFormat = 'EEE'
@@ -48,8 +41,8 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
   // Get appointments for a specific date
   const getAppointmentsForDate = (date: Date) => {
     return appointments.filter(apt => {
-      const aptDate = toPKT(parseISO(apt.appointment_date))
-      return isSameDay(aptDate, date)
+      const aptDate = toPKT(dayjs(apt.appointment_date).toDate())
+      return dayjs(aptDate).isSame(date, 'day')
     })
   }
 
@@ -65,17 +58,17 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
   const days = []
   let day = startDate
 
-  while (day <= endDate) {
+  while (day.isSameOrBefore(endDate)) {
     days.push(day)
-    day = addDays(day, 1)
+    day = day.add(1, 'day')
   }
 
   const previousMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1))
+    setCurrentMonth(dayjs(currentMonth).subtract(1, 'month').toDate())
   }
 
   const nextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1))
+    setCurrentMonth(dayjs(currentMonth).add(1, 'month').toDate())
   }
 
   return (
@@ -118,7 +111,7 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
-            {format(currentMonth, dateFormat)}
+            {dayjs(currentMonth).format(dateFormat)}
           </h3>
           <div className="flex gap-2">
             <motion.button
@@ -152,18 +145,18 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-2">
           {days.map((day, index) => {
-            const dayAppointments = getAppointmentsForDate(day)
+            const dayAppointments = getAppointmentsForDate(day.toDate())
             const hasAppointments = dayAppointments.length > 0
-            const isCurrentMonth = isSameMonth(day, monthStart)
-            const isSelected = selectedDate && isSameDay(day, selectedDate)
-            const isTodayDate = isToday(day)
+            const isCurrentMonth = day.isSame(monthStart, 'month')
+            const isSelected = selectedDate && day.isSame(selectedDate, 'day')
+            const isTodayDate = day.isSame(dayjs(), 'day')
 
             return (
               <motion.button
                 key={index}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedDate(day)}
+                onClick={() => setSelectedDate(day.toDate())}
                 className={`
                   relative aspect-square p-2 rounded-lg text-center transition-all
                   ${!isCurrentMonth ? 'text-gray-400' : 'text-gray-900'}
@@ -173,7 +166,7 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
                   ${hasAppointments && !isTodayDate && !isSelected ? 'bg-green-50' : ''}
                 `}
               >
-                <span className="text-sm">{format(day, numFormat)}</span>
+                <span className="text-sm">{day.format(numFormat)}</span>
                 {hasAppointments && (
                   <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
                     <span className="flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-primary-500 text-white rounded-full">
@@ -194,7 +187,7 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
             className="mt-6 pt-6 border-t border-gray-200"
           >
             <h4 className="font-semibold text-gray-900 mb-4">
-              Appointments on {format(selectedDate, 'MMMM d, yyyy')}
+              Appointments on {dayjs(selectedDate).format('MMMM D, YYYY')}
             </h4>
             <div className="space-y-2">
               {selectedDateAppointments.map((apt) => (
@@ -223,7 +216,7 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
 
         {selectedDate && selectedDateAppointments.length === 0 && (
           <div className="mt-6 pt-6 border-t border-gray-200 text-center text-gray-500">
-            No appointments on {format(selectedDate, 'MMMM d, yyyy')}
+            No appointments on {dayjs(selectedDate).format('MMMM D, YYYY')}
           </div>
         )}
       </div>

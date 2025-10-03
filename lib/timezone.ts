@@ -1,10 +1,18 @@
 // Pakistan Standard Time (PKT) utilities
 // PKT is UTC+5:00
 
-import { format as dateFnsFormat } from 'date-fns'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 
-const PKT_OFFSET_HOURS = 5 // UTC+5
-const PKT_OFFSET_MS = PKT_OFFSET_HOURS * 60 * 60 * 1000
+// Extend dayjs with plugins
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+// Set default timezone to PKT
+dayjs.tz.setDefault('Asia/Karachi')
+
+const PKT_TIMEZONE = 'Asia/Karachi'
 
 /**
  * Convert any date to Pakistan Standard Time
@@ -12,13 +20,7 @@ const PKT_OFFSET_MS = PKT_OFFSET_HOURS * 60 * 60 * 1000
  * @returns Date object adjusted to PKT
  */
 export function toPKT(date: Date | string | number): Date {
-  const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date
-  
-  // Get UTC time
-  const utcTime = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000)
-  
-  // Add PKT offset
-  return new Date(utcTime + PKT_OFFSET_MS)
+  return dayjs(date).tz(PKT_TIMEZONE).toDate()
 }
 
 /**
@@ -36,8 +38,7 @@ export function getCurrentPKT(): Date {
  * @returns Formatted date string in PKT
  */
 export function formatToPKT(date: Date | string | number, formatStr: string = 'MMM d, yyyy h:mm a'): string {
-  const pktDate = toPKT(date)
-  return dateFnsFormat(pktDate, formatStr)
+  return dayjs(date).tz(PKT_TIMEZONE).format(formatStr)
 }
 
 /**
@@ -46,9 +47,9 @@ export function formatToPKT(date: Date | string | number, formatStr: string = 'M
  * @returns Formatted string like "October 2, 2025 at 3:45 PM PKT"
  */
 export function formatPKTLong(date: Date | string | number): string {
-  const pktDate = toPKT(date)
-  const formatted = dateFnsFormat(pktDate, 'MMMM d, yyyy')
-  const time = dateFnsFormat(pktDate, 'h:mm a')
+  const pktDate = dayjs(date).tz(PKT_TIMEZONE)
+  const formatted = pktDate.format('MMMM D, YYYY')
+  const time = pktDate.format('h:mm A')
   return `${formatted} at ${time} PKT`
 }
 
@@ -85,8 +86,8 @@ export function formatDatePKT(date: Date | string | number): string {
  * @returns Date string for input field
  */
 export function getDateInputValuePKT(date?: Date | string | number): string {
-  const pktDate = date ? toPKT(date) : getCurrentPKT()
-  return dateFnsFormat(pktDate, 'yyyy-MM-dd')
+  const pktDate = date ? dayjs(date).tz(PKT_TIMEZONE) : dayjs().tz(PKT_TIMEZONE)
+  return pktDate.format('YYYY-MM-DD')
 }
 
 /**
@@ -95,8 +96,8 @@ export function getDateInputValuePKT(date?: Date | string | number): string {
  * @returns Time string for input field
  */
 export function getTimeInputValuePKT(date?: Date | string | number): string {
-  const pktDate = date ? toPKT(date) : getCurrentPKT()
-  return dateFnsFormat(pktDate, 'HH:mm')
+  const pktDate = date ? dayjs(date).tz(PKT_TIMEZONE) : dayjs().tz(PKT_TIMEZONE)
+  return pktDate.format('HH:mm')
 }
 
 /**

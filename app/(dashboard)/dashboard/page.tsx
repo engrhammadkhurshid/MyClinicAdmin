@@ -3,8 +3,10 @@ import { DashboardKPIs, defaultKPIs } from '@/components/DashboardKPIs'
 import { QuickActions } from '@/components/QuickActions'
 import { RecentActivityFeed } from '@/components/RecentActivityFeed'
 import { AppointmentCalendar } from '@/components/AppointmentCalendar'
-import { format, startOfDay, startOfMonth, subMonths, isAfter, addDays } from 'date-fns'
+import dayjs from 'dayjs'
 import { getCurrentPKT, toPKT } from '@/lib/timezone'
+
+export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getDashboardData() {
   const supabase = await createServerComponentClient()
@@ -27,7 +29,7 @@ async function getDashboardData() {
 
   // Use PKT for all date calculations
   const nowPKT = getCurrentPKT()
-  const today = startOfDay(nowPKT)
+  const today = dayjs(nowPKT).startOf('day')
 
   // Get total patients
   const { count: totalPatients } = await supabase
@@ -41,10 +43,10 @@ async function getDashboardData() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .gte('appointment_date', today.toISOString())
-    .lt('appointment_date', addDays(today, 1).toISOString())
+    .lt('appointment_date', dayjs(today).add(1, 'day').toISOString())
 
   // Get yesterday's appointments for comparison (PKT)
-  const yesterday = addDays(today, -1)
+  const yesterday = dayjs(today).subtract(1, 'day')
   const { count: appointmentsYesterday } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
@@ -53,7 +55,7 @@ async function getDashboardData() {
     .lt('appointment_date', today.toISOString())
 
   // Get this week's patients (last 7 days in PKT)
-  const sevenDaysAgo = addDays(today, -7)
+  const sevenDaysAgo = dayjs(today).subtract(7, 'day')
   const { count: weeklyPatients } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
@@ -62,7 +64,7 @@ async function getDashboardData() {
     .lte('appointment_date', today.toISOString())
 
   // Get previous week's patients for comparison (PKT)
-  const fourteenDaysAgo = addDays(today, -14)
+  const fourteenDaysAgo = dayjs(today).subtract(14, 'day')
   const { count: previousWeekPatients } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
@@ -71,7 +73,7 @@ async function getDashboardData() {
     .lt('appointment_date', sevenDaysAgo.toISOString())
 
   // Get monthly visits (PKT)
-  const startOfThisMonth = startOfMonth(nowPKT)
+  const startOfThisMonth = dayjs(nowPKT).startOf('month')
   const { count: monthlyVisits } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
@@ -79,7 +81,7 @@ async function getDashboardData() {
     .gte('appointment_date', startOfThisMonth.toISOString())
 
   // Get last month visits for comparison (PKT)
-  const startOfLastMonth = startOfMonth(subMonths(nowPKT, 1))
+  const startOfLastMonth = dayjs(nowPKT).subtract(1, 'month').startOf('month')
   const { count: lastMonthVisits } = await supabase
     .from('appointments')
     .select('*', { count: 'exact', head: true })
@@ -103,7 +105,7 @@ async function getDashboardData() {
     : 0
 
   // Get follow-ups due (next 7 days in PKT)
-  const nextWeek = addDays(nowPKT, 7)
+  const nextWeek = dayjs(nowPKT).add(7, 'day')
   const { data: followUps } = await supabase
     .from('appointments')
     .select('*')
@@ -124,13 +126,13 @@ async function getDashboardData() {
     id: apt.id,
     type: 'appointment' as const,
     title: `Appointment with ${apt.patients?.full_name || 'Unknown'}`,
-    description: `${apt.visit_type} - ${format(new Date(apt.appointment_date), 'MMM d, yyyy')}`,
+    description: `${apt.visit_type} - ${dayjs(apt.appointment_date).format('MMM D, YYYY')}`,
     timestamp: new Date(apt.created_at),
   }))
 
   // Get all appointments for calendar (last 2 months + next 2 months in PKT)
-  const twoMonthsAgo = subMonths(nowPKT, 2)
-  const twoMonthsAhead = addDays(nowPKT, 60)
+  const twoMonthsAgo = dayjs(nowPKT).subtract(2, 'month')
+  const twoMonthsAhead = dayjs(nowPKT).add(60, 'day')
   const { data: calendarAppointments } = await supabase
     .from('appointments')
     .select('id, appointment_date, visit_type, patients(id, full_name)')

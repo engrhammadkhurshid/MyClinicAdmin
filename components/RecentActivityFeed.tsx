@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { format } from 'date-fns'
+import dayjs from 'dayjs'
 import { UserPlus, Calendar, FileText } from 'lucide-react'
 
 interface Activity {
@@ -78,7 +78,7 @@ export function RecentActivityFeed({ activities }: { activities: Activity[] }) {
                   {activity.description}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {format(activity.timestamp, 'MMM d, yyyy • h:mm a')}
+                  {dayjs(activity.timestamp).format('MMM D, YYYY • h:mm A')}
                 </p>
               </div>
             </motion.div>

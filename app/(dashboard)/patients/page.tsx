@@ -3,6 +3,8 @@ import { createServerComponentClient } from '@/lib/supabase/server'
 import { Plus, Users as UsersIcon } from 'lucide-react'
 import { PatientTable } from '@/components/PatientTable'
 
+export const revalidate = 300 // Revalidate every 5 minutes
+
 async function getPatients() {
   const supabase = await createServerComponentClient()
   

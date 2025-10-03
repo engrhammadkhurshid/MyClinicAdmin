@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { createServerComponentClient } from '@/lib/supabase/server'
 import { Plus, Calendar as CalendarIcon } from 'lucide-react'
-import { format, subMonths, addDays } from 'date-fns'
+import dayjs from 'dayjs'
 import { AppointmentCalendar } from '@/components/AppointmentCalendar'
 import { getCurrentPKT } from '@/lib/timezone'
+
+export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getAppointments() {
   const supabase = await createServerComponentClient()
@@ -25,8 +27,8 @@ async function getAppointments() {
 
   // Get appointments for calendar (last 2 months + next 2 months)
   const nowPKT = getCurrentPKT()
-  const twoMonthsAgo = subMonths(nowPKT, 2)
-  const twoMonthsAhead = addDays(nowPKT, 60)
+  const twoMonthsAgo = dayjs(nowPKT).subtract(2, 'month')
+  const twoMonthsAhead = dayjs(nowPKT).add(60, 'day')
   
   const { data: calendarAppointments } = await supabase
     .from('appointments')
@@ -123,7 +125,7 @@ export default async function AppointmentsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-900">
-                      {format(new Date(appointment.appointment_date), 'MMM d, yyyy • h:mm a')}
+                      {dayjs(appointment.appointment_date).format('MMM D, YYYY • h:mm A')}
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">

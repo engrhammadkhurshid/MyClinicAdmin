@@ -2,7 +2,7 @@ import { createServerComponentClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, Phone, Mail, MapPin, FileText } from 'lucide-react'
-import { format } from 'date-fns'
+import dayjs from 'dayjs'
 
 async function getPatientProfile(patientId: string) {
   const supabase = await createServerComponentClient()
@@ -166,7 +166,7 @@ export default async function PatientProfilePage({
               <div>
                 <p className="text-sm text-gray-600 mb-1">Registered</p>
                 <p className="font-medium text-gray-900">
-                  {format(new Date(patient.created_at), 'MMMM d, yyyy')}
+                  {dayjs(patient.created_at).format('MMMM D, YYYY')}
                 </p>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default async function PatientProfilePage({
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {format(new Date(appointment.appointment_date), 'MMM d, yyyy • h:mm a')}
+                        {dayjs(appointment.appointment_date).format('MMM D, YYYY • h:mm A')}
                       </p>
                     </div>
                     
@@ -250,7 +250,7 @@ export default async function PatientProfilePage({
                       {attachment.file_name}
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      {format(new Date(attachment.uploaded_at), 'MMM d, yyyy')}
+                      {dayjs(attachment.uploaded_at).format('MMM D, YYYY')}
                     </p>
                   </a>
                 ))}
