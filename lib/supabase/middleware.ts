@@ -122,8 +122,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
-  // Redirect to dashboard if authenticated and trying to access auth pages (but not root)
-  if (user && isPublicRoute && request.nextUrl.pathname !== '/' && request.nextUrl.pathname !== '/auth/forgot-password') {
+  // Redirect to dashboard if authenticated and trying to access public routes (except forgot-password)
+  if (user && isPublicRoute && request.nextUrl.pathname !== '/auth/forgot-password') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

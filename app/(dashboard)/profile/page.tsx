@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { User, Mail, Phone, Lock, LogOut, Clock } from 'lucide-react'
 import { formatPKTShort } from '@/lib/timezone'
 import toast from 'react-hot-toast'
+import { PWAInstallButton } from '@/components/PWAInstallButton'
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
@@ -253,7 +254,7 @@ export default function ProfilePage() {
     try {
       await supabase.auth.signOut()
       toast.success('Logged out successfully')
-      router.push('/auth/login')
+      router.push('/auth/signin')
     } catch (error: any) {
       toast.error('Failed to logout')
     }
@@ -361,6 +362,19 @@ export default function ProfilePage() {
               {updating ? 'Updating...' : 'Update Clinic Information'}
             </motion.button>
           </form>
+        </motion.div>
+
+        {/* PWA Install Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Install MyClinic App
+          </h2>
+          <PWAInstallButton />
         </motion.div>
 
         {/* Manager Information */}

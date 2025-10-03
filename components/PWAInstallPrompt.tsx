@@ -3,14 +3,45 @@
 import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 
+// Store the deferred prompt globally so it can be accessed from profile page
+let globalDeferredPrompt: any = null
+let hasShownInSession = false // Track if we've shown the prompt in this session
+
+export function getInstallPrompt() {
+  return globalDeferredPrompt
+}
+
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
+    // Don't show if already shown in this session
+    if (hasShownInSession) {
+      return
+    }
+
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       return
+    }
+
+    // Check if permanently dismissed
+    const permanentlyDismissed = localStorage.getItem('pwa-permanently-dismissed')
+    if (permanentlyDismissed === 'true') {
+      return
+    }
+
+    // Check if user chose "Remind Later" in this session
+    const sessionDismissed = sessionStorage.getItem('pwa-session-dismissed')
+    if (sessionDismissed === 'true') {
+      return
+    }
+
+    // Check if user chose "Remind Later" and it hasn't expired (next login)
+    const remindLater = localStorage.getItem('pwa-remind-later')
+    if (remindLater) {
+      return // Don't show until next session/login
     }
 
     const handler = (e: Event) => {
@@ -18,8 +49,15 @@ export function PWAInstallPrompt() {
       e.preventDefault()
       // Store the event so it can be triggered later
       setDeferredPrompt(e)
-      // Show install prompt after 3 seconds
-      setTimeout(() => setShowPrompt(true), 3000)
+      globalDeferredPrompt = e
+      
+      // Only show if we haven't shown in this session
+      if (!hasShownInSession) {
+        setTimeout(() => {
+          setShowPrompt(true)
+          hasShownInSession = true
+        }, 3000)
+      }
     }
 
     window.addEventListener('beforeinstallprompt', handler as EventListener)
@@ -40,25 +78,35 @@ export function PWAInstallPrompt() {
 
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt')
+      // Clear all dismissal flags
+      localStorage.removeItem('pwa-remind-later')
+      localStorage.removeItem('pwa-permanently-dismissed')
+      sessionStorage.removeItem('pwa-session-dismissed')
     }
 
     // Clear the prompt
     setDeferredPrompt(null)
+    globalDeferredPrompt = null
     setShowPrompt(false)
+    hasShownInSession = true
+  }
+
+  const handleRemindLater = () => {
+    setShowPrompt(false)
+    hasShownInSession = true
+    // Mark as dismissed for this session only
+    sessionStorage.setItem('pwa-session-dismissed', 'true')
+    // Also set reminder for next login/session
+    localStorage.setItem('pwa-remind-later', 'true')
   }
 
   const handleDismiss = () => {
     setShowPrompt(false)
-    // Don't show again for this session
-    localStorage.setItem('pwa-prompt-dismissed', 'true')
+    hasShownInSession = true
+    // Permanently dismiss (user can still install from profile page)
+    localStorage.setItem('pwa-permanently-dismissed', 'true')
+    sessionStorage.setItem('pwa-session-dismissed', 'true')
   }
-
-  // Don't show if dismissed in this session
-  useEffect(() => {
-    if (localStorage.getItem('pwa-prompt-dismissed')) {
-      setShowPrompt(false)
-    }
-  }, [])
 
   if (!showPrompt || !deferredPrompt) return null
 
@@ -78,7 +126,8 @@ export function PWAInstallPrompt() {
           <button
             onClick={handleDismiss}
             className="text-white hover:bg-white/20 rounded-lg p-1 transition"
-            aria-label="Dismiss"
+            aria-label="Close permanently"
+            title="Don't show again"
           >
             <X className="w-5 h-5" />
           </button>
@@ -89,20 +138,31 @@ export function PWAInstallPrompt() {
             Install MyClinic Admin on your device for quick access and offline capabilities.
           </p>
           
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
             <button
               onClick={handleInstall}
-              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2.5 px-4 rounded-lg transition"
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2.5 px-4 rounded-lg transition"
             >
-              Install App
+              Install Now
             </button>
-            <button
-              onClick={handleDismiss}
-              className="px-4 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-            >
-              Not Now
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRemindLater}
+                className="flex-1 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition border border-gray-300"
+              >
+                Remind Later
+              </button>
+              <button
+                onClick={handleDismiss}
+                className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition"
+              >
+                Don&apos;t Show Again
+              </button>
+            </div>
           </div>
+          <p className="text-xs text-gray-500 mt-3 text-center">
+            You can install anytime from your profile settings
+          </p>
         </div>
       </div>
     </div>
