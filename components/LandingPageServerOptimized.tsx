@@ -245,24 +245,28 @@ export function LandingPageServerOptimized() {
                 ))}
               </div>
             </div>
-            <div className="relative">
-              {/* Neon Glow Effect Container */}
+            <div className="relative flex items-center justify-center">
+              {/* Mobile Mockup with Neon Glow - Large Size */}
               <div className="relative group">
-                {/* Animated neon glow background */}
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-2xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500 animate-gradient"></div>
-                
-                {/* Image Container with Shadow */}
-                <div className="relative aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-2xl overflow-hidden">
-                  <Image
-                    src="/mobile-mockup.png"
-                    alt="MyClinicAdmin Mobile Mockup"
-                    fill
-                    className="object-contain p-4"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  {/* Additional inner shadow for depth */}
-                  <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
-                </div>
+                <Image
+                  src="/mobile-mockup.png"
+                  alt="MyClinicAdmin Mobile Mockup"
+                  width={600}
+                  height={800}
+                  className="relative z-10 w-full h-auto max-w-md lg:max-w-lg xl:max-w-xl drop-shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                  style={{
+                    filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 60px rgba(147, 51, 234, 0.3))',
+                  }}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                {/* Animated neon glow effect directly on image */}
+                <div 
+                  className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity duration-500 blur-3xl animate-gradient"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.4), rgba(59, 130, 246, 0.6))',
+                    animation: 'gradient 3s ease infinite',
+                  }}
+                ></div>
               </div>
             </div>
           </div>
