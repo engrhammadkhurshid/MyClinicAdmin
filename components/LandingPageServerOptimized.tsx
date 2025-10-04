@@ -78,28 +78,26 @@ export function LandingPageServerOptimized() {
 
       {/* Hero Section - Background Image with Glassmorphism */}
       <section className="relative overflow-hidden min-h-[90vh] flex items-center">
-        {/* Background Image */}
-        <div className="absolute inset-0 -z-10">
+        {/* Background Image - Clear and Visible */}
+        <div className="absolute inset-0 z-0">
           <Image
             src="/hero-background.webp"
             alt="Clinic receptionist using MyClinicAdmin"
             fill
             priority
-            quality={90}
-            className="object-cover"
+            quality={95}
+            className="object-cover object-center"
             sizes="100vw"
           />
-          {/* 10% Glassmorphic Overlay */}
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
-          {/* Gradient for better readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/40 to-transparent" />
+          {/* Light overlay for better text readability without hiding the image */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/50 via-white/30 to-white/20" />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 w-full">
           <div className="max-w-3xl mx-auto text-center">
             
             {/* Glass Card with Content */}
-            <div className="backdrop-blur-md bg-white/30 rounded-3xl p-8 md:p-12 shadow-2xl border border-white/50 animate-fade-in-up">
+            <div className="backdrop-blur-lg bg-white/40 rounded-3xl p-8 md:p-12 shadow-2xl border border-white/60 animate-fade-in-up">
               
               <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-500/20 backdrop-blur-sm text-blue-900 rounded-full text-sm font-semibold border border-blue-300/50 animate-slide-in-left">
                 <Sparkles className="w-4 h-4" />
@@ -139,17 +137,17 @@ export function LandingPageServerOptimized() {
 
               {/* Stats with Glass Effect */}
               <div className="grid grid-cols-3 gap-4 md:gap-6">
-                <div className="backdrop-blur-sm bg-white/40 rounded-xl p-4 border border-white/50 transform transition hover:scale-105">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-600 drop-shadow">10K+</div>
-                  <div className="text-sm text-gray-800 font-medium">Appointments</div>
+                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">10K+</div>
+                  <div className="text-sm text-gray-900 font-semibold">Appointments</div>
                 </div>
-                <div className="backdrop-blur-sm bg-white/40 rounded-xl p-4 border border-white/50 transform transition hover:scale-105">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-600 drop-shadow">500+</div>
-                  <div className="text-sm text-gray-800 font-medium">Clinics</div>
+                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">500+</div>
+                  <div className="text-sm text-gray-900 font-semibold">Clinics</div>
                 </div>
-                <div className="backdrop-blur-sm bg-white/40 rounded-xl p-4 border border-white/50 transform transition hover:scale-105">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-600 drop-shadow">99%</div>
-                  <div className="text-sm text-gray-800 font-medium">Satisfaction</div>
+                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">99%</div>
+                  <div className="text-sm text-gray-900 font-semibold">Satisfaction</div>
                 </div>
               </div>
             </div>
