@@ -151,33 +151,86 @@ export default function InviteManagerButton({ clinicId }: InviteManagerButtonPro
         throw inviteError
       }
 
-      // TODO: Send email with invite link
-      // For now, we'll just show the invite link
+      // Send invitation email
       const inviteLink = `${window.location.origin}/invite/${token}`
       
-      toast.success('Invitation sent successfully!', { id: loadingToast })
+      // Get clinic name for email
+      const { data: clinicData } = await supabase
+        .from('clinic')
+        .select('name')
+        .eq('id', clinicId)
+        .single()
       
-      // Show invite link to copy
-      toast(
-        (t) => (
-          <div className="flex flex-col gap-2">
-            <p className="font-semibold">Share this invite link:</p>
-            <div className="bg-gray-100 p-2 rounded text-xs break-all">
-              {inviteLink}
+      try {
+        const emailResponse = await fetch('/api/send-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailToInvite,
+            inviteLink,
+            clinicName: clinicData?.name || 'your clinic',
+            inviterName: user.user_metadata?.full_name || user.email
+          })
+        })
+
+        const emailResult = await emailResponse.json()
+
+        if (!emailResponse.ok) {
+          throw new Error(emailResult.error || 'Failed to send email')
+        }
+
+        toast.success('Invitation sent successfully!', { id: loadingToast })
+
+        // In development, also show the link
+        if (process.env.NODE_ENV === 'development' && emailResult.inviteLink) {
+          toast(
+            (t) => (
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold text-sm">📧 Email sent! Dev link:</p>
+                <div className="bg-gray-100 p-2 rounded text-xs break-all">
+                  {emailResult.inviteLink}
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(emailResult.inviteLink)
+                    toast.success('Link copied!', { id: t.id })
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Copy Link
+                </button>
+              </div>
+            ),
+            { duration: 8000 }
+          )
+        }
+      } catch (emailError: any) {
+        // Email failed but invite was created - show fallback
+        console.error('Email sending failed:', emailError)
+        toast.error('Invite created but email failed to send', { id: loadingToast })
+        
+        // Show the link as fallback
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold text-orange-600">⚠️ Email failed - Share manually:</p>
+              <div className="bg-gray-100 p-2 rounded text-xs break-all">
+                {inviteLink}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteLink)
+                  toast.success('Link copied!', { id: t.id })
+                }}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Copy Link
+              </button>
             </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(inviteLink)
-                toast.success('Link copied!', { id: t.id })
-              }}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Copy Link
-            </button>
-          </div>
-        ),
-        { duration: 10000 }
-      )
+          ),
+          { duration: 15000 }
+        )
+      }
 
       // Reset form and close modal
       setFormData({ email: '', fullName: '' })

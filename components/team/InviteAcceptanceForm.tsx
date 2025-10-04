@@ -32,6 +32,52 @@ export default function InviteAcceptanceForm({ invite, clinic }: InviteAcceptanc
   const supabase = createClient()
 
   // Step 1: Check if user already has an account
+  // Check if user is eligible to join the clinic
+  const checkEligibility = async (uid: string): Promise<boolean> => {
+    const loadingToast = toast.loading('Verifying eligibility...')
+    
+    try {
+      // 1. Check if user is the owner of this clinic
+      const { data: ownerCheck } = await supabase
+        .from('clinic')
+        .select('name, owner_id')
+        .eq('id', invite.clinic_id)
+        .single()
+
+      if (ownerCheck?.owner_id === uid) {
+        toast.error('You are the owner of this clinic and cannot be invited as a manager', { id: loadingToast })
+        return false
+      }
+
+      // 2. Check if user already exists in clinic_staff
+      const { data: existingStaff } = await supabase
+        .from('clinic_staff')
+        .select('role, status')
+        .eq('clinic_id', invite.clinic_id)
+        .eq('user_id', uid)
+        .single()
+
+      if (existingStaff) {
+        toast.error(
+          `You are already associated with this clinic as ${existingStaff.role} (Status: ${existingStaff.status})`,
+          { id: loadingToast, duration: 6000 }
+        )
+        return false
+      }
+
+      toast.dismiss(loadingToast)
+      return true
+    } catch (error: any) {
+      // Only fail if it's not a "no rows" error
+      if (error.code !== 'PGRST116') {
+        toast.error('Failed to verify eligibility', { id: loadingToast })
+        return false
+      }
+      toast.dismiss(loadingToast)
+      return true
+    }
+  }
+
   const handleCheckAccount = async (shouldHaveAccount: boolean) => {
     setHasAccount(shouldHaveAccount)
     
@@ -59,11 +105,12 @@ export default function InviteAcceptanceForm({ invite, clinic }: InviteAcceptanc
     }
 
     setLoading(true)
-    const loadingToast = toast.loading(hasAccount ? 'Signing in...' : 'Creating account...')
+    const loadingToast = toast.loading('Checking eligibility...')
 
     try {
       if (hasAccount) {
-        // Login
+        // Login first
+        toast.loading('Signing in...', { id: loadingToast })
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
@@ -76,13 +123,34 @@ export default function InviteAcceptanceForm({ invite, clinic }: InviteAcceptanc
           throw new Error('Email does not match invitation')
         }
 
+        // CHECK ELIGIBILITY BEFORE PROCEEDING
+        toast.loading('Checking if you can join...', { id: loadingToast })
+        const canJoin = await checkEligibility(data.user!.id)
+        if (!canJoin) {
+          // Error already shown by checkEligibility
+          return
+        }
+
         setUserId(data.user!.id)
         toast.success('Signed in successfully!', { id: loadingToast })
         
         // Accept invite immediately
         await acceptInvite(data.user!.id)
       } else {
+        // For new users, check if email is already registered FIRST
+        toast.loading('Checking email...', { id: loadingToast })
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('email', formData.email)
+          .single()
+
+        if (existingUser) {
+          throw new Error('This email is already registered. Please choose "Yes, I have an account" instead.')
+        }
+
         // Signup with OTP
+        toast.loading('Creating account...', { id: loadingToast })
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -91,6 +159,14 @@ export default function InviteAcceptanceForm({ invite, clinic }: InviteAcceptanc
         if (error) throw error
 
         if (data.user) {
+          // CHECK ELIGIBILITY BEFORE SENDING OTP
+          const canJoin = await checkEligibility(data.user.id)
+          if (!canJoin) {
+            // Delete the user we just created since they can't join
+            await supabase.auth.admin.deleteUser(data.user.id)
+            return
+          }
+
           setUserId(data.user.id)
           toast.success('OTP sent to your email!', { id: loadingToast })
           setStep('otp')
