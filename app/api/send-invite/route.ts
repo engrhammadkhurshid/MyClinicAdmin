@@ -13,55 +13,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // TODO: Replace with your email service
-    // Option 1: Resend (recommended for Next.js)
+    // ============================================
+    // RESEND EMAIL SERVICE (Recommended)
+    // ============================================
+    // 1. Install: npm install resend
+    // 2. Add RESEND_API_KEY to .env.local and Vercel
+    // 3. Uncomment the code below
+    // 4. Comment out the TEMPORARY section at the bottom
+    // ============================================
+    
+    // UNCOMMENT THIS BLOCK TO ENABLE RESEND:
+    // --------------------------------------------
     // const { Resend } = require('resend')
     // const resend = new Resend(process.env.RESEND_API_KEY)
     // 
     // await resend.emails.send({
-    //   from: 'MyClinicAdmin <invites@yourdomain.com>',
+    //   from: 'MyClinicAdmin <onboarding@resend.dev>', // Change to 'invites@yourdomain.com' after domain verification
     //   to: email,
     //   subject: `You've been invited to join ${clinicName}`,
-    //   html: getEmailTemplate(clinicName, inviterName, inviteLink)
-    // })
-
-    // Option 2: SendGrid
-    // const sgMail = require('@sendgrid/mail')
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-    // 
-    // await sgMail.send({
-    //   to: email,
-    //   from: 'invites@yourdomain.com',
-    //   subject: `You've been invited to join ${clinicName}`,
-    //   html: getEmailTemplate(clinicName, inviterName, inviteLink)
-    // })
-
-    // Option 3: Nodemailer (SMTP)
-    // const nodemailer = require('nodemailer')
-    // const transporter = nodemailer.createTransport({
-    //   host: process.env.SMTP_HOST,
-    //   port: process.env.SMTP_PORT,
-    //   auth: {
-    //     user: process.env.SMTP_USER,
-    //     pass: process.env.SMTP_PASSWORD
-    //   }
+    //   html: getEmailTemplate(clinicName, inviterName, inviteLink),
+    //   replyTo: 'support@yourdomain.com' // Optional
     // })
     // 
-    // await transporter.sendMail({
-    //   from: 'invites@yourdomain.com',
-    //   to: email,
-    //   subject: `You've been invited to join ${clinicName}`,
-    //   html: getEmailTemplate(clinicName, inviterName, inviteLink)
+    // return NextResponse.json({ 
+    //   success: true,
+    //   message: 'Invitation email sent successfully'
     // })
+    // --------------------------------------------
 
-    // TEMPORARY: For development, just return success
-    // Remove this and uncomment one of the options above for production
-    console.log('📧 Email would be sent to:', email)
-    console.log('📧 Invite link:', inviteLink)
+    // ============================================
+    // TEMPORARY: Development Mode (REMOVE WHEN RESEND IS ENABLED)
+    // ============================================
+    console.log('📧 [DEV MODE] Email would be sent to:', email)
+    console.log('📧 [DEV MODE] Invite link:', inviteLink)
+    console.log('📧 [DEV MODE] Clinic:', clinicName)
+    console.log('📧 [DEV MODE] Inviter:', inviterName)
+    console.log('⚠️  To enable real emails, follow steps in docs/RESEND_SINGLE_SERVICE_SETUP.md')
     
     return NextResponse.json({ 
       success: true,
-      message: 'Email sent successfully',
+      message: 'Email sent (development mode)',
       // For development, return the link
       inviteLink: process.env.NODE_ENV === 'development' ? inviteLink : undefined
     })
