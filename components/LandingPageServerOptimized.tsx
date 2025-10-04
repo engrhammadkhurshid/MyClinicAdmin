@@ -96,59 +96,55 @@ export function LandingPageServerOptimized() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 w-full">
           <div className="max-w-3xl mx-auto text-center">
             
-            {/* Glass Card with Content */}
-            <div className="backdrop-blur-lg bg-white/40 rounded-3xl p-8 md:p-12 shadow-2xl border border-white/60 animate-fade-in-up">
-              
-              <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-500/20 backdrop-blur-sm text-blue-900 rounded-full text-sm font-semibold border border-blue-300/50 animate-slide-in-left">
-                <Sparkles className="w-4 h-4" />
-                Trusted by 50+ Clinics
-              </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight drop-shadow-lg">
-                Manage Your Clinic
-                <br />
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Like a Pro
-                </span>
-              </h1>
-              
-              <p className="text-lg md:text-2xl text-gray-800 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
-                Streamline appointments, manage patients, and grow your practice with our powerful, easy-to-use platform designed for modern clinics.
-              </p>
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-blue-500/20 backdrop-blur-sm text-blue-900 rounded-full text-sm font-semibold border border-blue-300/50 animate-slide-in-left">
+              <Sparkles className="w-4 h-4" />
+              Trusted by 50+ Clinics
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight drop-shadow-lg animate-fade-in-up">
+              Manage Your Clinic
+              <br />
+              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Like a Pro
+              </span>
+            </h1>
+            
+            <p className="text-lg md:text-2xl text-gray-800 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
+              Streamline appointments, manage patients, and grow your practice with our powerful, easy-to-use platform designed for modern clinics.
+            </p>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link 
-                  href="/auth/signup"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl gap-2 backdrop-blur-sm"
-                  prefetch={true}
-                >
-                  Get Started Free
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link 
-                  href="/auth/signin"
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white/80 hover:bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-600 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg backdrop-blur-sm"
-                  prefetch={true}
-                >
-                  Sign In
-                </Link>
-              </div>
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link 
+                href="/auth/signup"
+                className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl gap-2 backdrop-blur-sm"
+                prefetch={true}
+              >
+                Get Started Free
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link 
+                href="/auth/signin"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white/80 hover:bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-600 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg backdrop-blur-sm"
+                prefetch={true}
+              >
+                Sign In
+              </Link>
+            </div>
 
-              {/* Stats with Glass Effect */}
-              <div className="grid grid-cols-3 gap-4 md:gap-6">
-                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">10K+</div>
-                  <div className="text-sm text-gray-900 font-semibold">Appointments</div>
-                </div>
-                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">500+</div>
-                  <div className="text-sm text-gray-900 font-semibold">Clinics</div>
-                </div>
-                <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
-                  <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">99%</div>
-                  <div className="text-sm text-gray-900 font-semibold">Satisfaction</div>
-                </div>
+            {/* Stats with Glass Effect */}
+            <div className="grid grid-cols-3 gap-4 md:gap-6">
+              <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">10K+</div>
+                <div className="text-sm text-gray-900 font-semibold">Appointments</div>
+              </div>
+              <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">500+</div>
+                <div className="text-sm text-gray-900 font-semibold">Clinics</div>
+              </div>
+              <div className="backdrop-blur-md bg-white/50 rounded-xl p-4 border border-white/60 transform transition hover:scale-105 shadow-lg">
+                <div className="text-3xl md:text-4xl font-bold text-blue-700 drop-shadow-lg">99%</div>
+                <div className="text-sm text-gray-900 font-semibold">Satisfaction</div>
               </div>
             </div>
             
