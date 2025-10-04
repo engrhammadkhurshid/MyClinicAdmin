@@ -137,12 +137,13 @@ export default function MultiStepSignupForm() {
     const loadingToast = toast.loading('Creating account and sending OTP...')
 
     try {
-      // Sign up with Supabase (using email OTP)
+      // Sign up with Supabase (using email OTP - NO emailRedirectTo for OTP flow)
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Remove emailRedirectTo for OTP flow - it causes "confirm email" mode
+          // emailRedirectTo is only for magic link/confirmation link flows
           data: {
             full_name: formData.fullName,
             designation: formData.designation,
@@ -161,7 +162,7 @@ export default function MultiStepSignupForm() {
         setUserId(data.user.id)
         setOtpSent(true)
         setCurrentStep(3)
-        toast.success('OTP sent to your email!', { id: loadingToast })
+        toast.success('OTP sent to your email! Check your inbox.', { id: loadingToast })
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to send OTP', { id: loadingToast })
