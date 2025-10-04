@@ -1,22 +1,50 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
-import { Home, Users, Calendar, User, LogOut, Stethoscope } from 'lucide-react'
+import { Home, Users, Calendar, User, LogOut, Stethoscope, Shield } from 'lucide-react'
 
-const navigation = [
+const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Patients', href: '/patients', icon: Users },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Profile', href: '/profile', icon: User },
 ]
 
+const ownerNavigation = [
+  { name: 'Team Management', href: '/team', icon: Shield, ownerOnly: true },
+]
+
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [isOwner, setIsOwner] = useState(false)
+  const [navigation, setNavigation] = useState(baseNavigation)
+
+  useEffect(() => {
+    async function checkRole() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('staff_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single()
+
+      if (data?.role === 'owner') {
+        setIsOwner(true)
+        setNavigation([...baseNavigation, ...ownerNavigation])
+      }
+    }
+
+    checkRole()
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

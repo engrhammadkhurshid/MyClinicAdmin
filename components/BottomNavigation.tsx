@@ -1,19 +1,47 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Home, Users, Calendar, User } from 'lucide-react'
+import { Home, Users, Calendar, User, Shield } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
-const navigation = [
+const baseNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Patients', href: '/patients', icon: Users },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Profile', href: '/profile', icon: User },
 ]
 
+const ownerNavigation = [
+  { name: 'Team', href: '/team', icon: Shield, ownerOnly: true },
+]
+
 export function BottomNavigation() {
   const pathname = usePathname()
+  const supabase = createClient()
+  const [navigation, setNavigation] = useState(baseNavigation)
+
+  useEffect(() => {
+    async function checkRole() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data } = await supabase
+        .from('staff_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single()
+
+      if (data?.role === 'owner') {
+        setNavigation([...baseNavigation, ...ownerNavigation])
+      }
+    }
+
+    checkRole()
+  }, [])
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50">
