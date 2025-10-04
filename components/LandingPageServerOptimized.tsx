@@ -246,8 +246,23 @@ export function LandingPageServerOptimized() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-video bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl shadow-2xl flex items-center justify-center">
-                <p className="text-blue-600 font-semibold text-lg">Dashboard Preview</p>
+              {/* Neon Glow Effect Container */}
+              <div className="relative group">
+                {/* Animated neon glow background */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-2xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500 animate-gradient"></div>
+                
+                {/* Image Container with Shadow */}
+                <div className="relative aspect-video bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-2xl overflow-hidden">
+                  <Image
+                    src="/mobile-mockup.png"
+                    alt="MyClinicAdmin Mobile Mockup"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  {/* Additional inner shadow for depth */}
+                  <div className="absolute inset-0 shadow-inner pointer-events-none"></div>
+                </div>
               </div>
             </div>
           </div>
