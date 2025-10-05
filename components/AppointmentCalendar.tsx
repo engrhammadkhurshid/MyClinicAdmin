@@ -24,20 +24,22 @@ interface Appointment {
 
 interface AppointmentCalendarProps {
   appointments: Appointment[]
+  weeklyView?: boolean // New prop for dashboard weekly view
 }
 
-export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) {
+export function AppointmentCalendar({ appointments, weeklyView = false }: AppointmentCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(getCurrentPKT())
   const [selectedDate, setSelectedDate] = useState<Date | null>(getCurrentPKT())
 
-  const monthStart = dayjs(currentMonth).startOf('month')
-  const monthEnd = dayjs(monthStart).endOf('month')
-  const startDate = dayjs(monthStart).startOf('week')
-  const endDate = dayjs(monthEnd).endOf('week')
+  // For weekly view, show only current week
+  const monthStart = dayjs(currentMonth).startOf(weeklyView ? 'week' : 'month')
+  const monthEnd = dayjs(monthStart).endOf(weeklyView ? 'week' : 'month')
+  const startDate = weeklyView ? monthStart : dayjs(monthStart).startOf('week')
+  const endDate = weeklyView ? monthEnd : dayjs(monthEnd).endOf('week')
 
-  const dateFormat = 'MMMM yyyy'
-  const dayFormat = 'EEE'
-  const numFormat = 'd'
+  const dateFormat = 'MMMM YYYY'
+  const dayFormat = 'ddd'
+  const numFormat = 'D'
 
   // Get appointments for a specific date
   const getAppointmentsForDate = (date: Date) => {
@@ -78,11 +80,11 @@ export function AppointmentCalendar({ appointments }: AppointmentCalendarProps) 
       <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-6 text-white">
         <h3 className="text-xl font-bold mb-4">Today&apos;s Appointments</h3>
         {todaysAppointments.length > 0 ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {todaysAppointments.map((apt) => {
               const patientSlug = createPatientSlug(apt.patient_name, apt.patient_id)
               return (
-                <Link key={apt.id} href={`/patients/${patientSlug}`}>
+                <Link key={apt.id} href={`/patients/${patientSlug}`} className="block">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors cursor-pointer"

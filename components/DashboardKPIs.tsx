@@ -1,16 +1,35 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Users, Calendar, TrendingUp, Clock, Activity, ArrowUp, ArrowDown, Minus, type LucideIcon } from 'lucide-react'
+import { Users, Calendar, TrendingUp, Clock, Activity, ArrowUp, ArrowDown, Minus, DollarSign, Stethoscope } from 'lucide-react'
 
 interface KPI {
   title: string
   value: string | number
   change: string
-  icon: LucideIcon
+  icon: 'Users' | 'Calendar' | 'Activity' | 'TrendingUp' | 'Clock' | 'DollarSign' | 'Stethoscope'
   color: string
   trend?: 'up' | 'down' | 'neutral'
   period?: string
+}
+
+const iconMap = {
+  Users,
+  Calendar,
+  Activity,
+  TrendingUp,
+  Clock,
+  DollarSign,
+  Stethoscope,
+}
+
+const iconGradients: Record<string, string> = {
+  'bg-primary-500': 'from-blue-500 to-blue-600',
+  'bg-blue-500': 'from-blue-500 to-blue-600',
+  'bg-green-500': 'from-green-500 to-green-600',
+  'bg-purple-500': 'from-purple-500 to-purple-600',
+  'bg-orange-500': 'from-orange-500 to-orange-600',
+  'bg-pink-500': 'from-pink-500 to-pink-600',
 }
 
 export function DashboardKPIs({ kpis }: { kpis: KPI[] }) {
@@ -25,7 +44,7 @@ export function DashboardKPIs({ kpis }: { kpis: KPI[] }) {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {kpis.map((kpi, index) => {
-          const Icon = kpi.icon
+          const Icon = iconMap[kpi.icon]
           
           // Determine trend icon
           let TrendIcon = Minus
@@ -39,6 +58,11 @@ export function DashboardKPIs({ kpis }: { kpis: KPI[] }) {
             trendColor = 'text-red-600'
           }
 
+          if (!Icon) {
+            console.error('Missing icon for KPI:', kpi.title, 'Icon name:', kpi.icon)
+            return null
+          }
+
           return (
             <motion.div
               key={kpi.title}
@@ -49,41 +73,10 @@ export function DashboardKPIs({ kpis }: { kpis: KPI[] }) {
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-xl transition-all hover:border-primary-300 cursor-pointer group"
             >
               <div className="flex items-start justify-between mb-4">
-                {/* Animated Icon Container */}
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ 
-                    delay: index * 0.1 + 0.2,
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15
-                  }}
-                  whileHover={{ 
-                    rotate: [0, -10, 10, -10, 0],
-                    transition: { duration: 0.5 }
-                  }}
-                  className={`relative p-4 rounded-xl ${kpi.color || 'bg-primary-500'} shadow-lg group-hover:shadow-xl transition-shadow`}
-                >
-                  {/* Glow effect */}
-                  <div className={`absolute inset-0 rounded-xl ${kpi.color || 'bg-primary-500'} opacity-0 group-hover:opacity-30 blur-xl transition-opacity`} />
-                  
-                  {/* Icon with animation */}
-                  {Icon && (
-                    <motion.div
-                      animate={{ 
-                        y: [0, -3, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    >
-                      <Icon className="w-7 h-7 text-white relative z-10" strokeWidth={2.5} />
-                    </motion.div>
-                  )}
-                </motion.div>
+                {/* Icon with gradient */}
+                <div className={`p-3 rounded-lg bg-gradient-to-br ${iconGradients[kpi.color] || 'from-blue-500 to-blue-600'} shadow-lg`}>
+                  {Icon && <Icon className="w-6 h-6 text-white" strokeWidth={2.5} />}
+                </div>
                 
                 {/* Trend Indicator with animation */}
                 {kpi.trend && (
@@ -198,7 +191,7 @@ export const defaultKPIs: KPI[] = [
     title: 'Total Patients',
     value: 0,
     change: 'All time',
-    icon: Users,
+    icon: 'Users',
     color: 'bg-primary-500',
     period: 'ALL TIME',
     trend: 'up',
@@ -207,7 +200,7 @@ export const defaultKPIs: KPI[] = [
     title: 'Today\'s Appointments',
     value: 0,
     change: 'Scheduled today',
-    icon: Calendar,
+    icon: 'Calendar',
     color: 'bg-green-500',
     period: 'TODAY',
     trend: 'neutral',
@@ -216,7 +209,7 @@ export const defaultKPIs: KPI[] = [
     title: 'Weekly Patients',
     value: 0,
     change: 'Last 7 days',
-    icon: Activity,
+    icon: 'Activity',
     color: 'bg-blue-500',
     period: 'WEEKLY',
     trend: 'up',
@@ -225,7 +218,7 @@ export const defaultKPIs: KPI[] = [
     title: 'Monthly Visits',
     value: 0,
     change: 'This month',
-    icon: TrendingUp,
+    icon: 'TrendingUp',
     color: 'bg-purple-500',
     period: 'MONTHLY',
     trend: 'up',
@@ -234,7 +227,7 @@ export const defaultKPIs: KPI[] = [
     title: 'Follow-ups Due',
     value: 0,
     change: 'Next 7 days',
-    icon: Clock,
+    icon: 'Clock',
     color: 'bg-orange-500',
     period: 'UPCOMING',
     trend: 'neutral',

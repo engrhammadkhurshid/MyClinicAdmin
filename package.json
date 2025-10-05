@@ -17,6 +17,7 @@
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "autoprefixer": "^10.4.21",
+    "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.3",
     "dayjs": "^1.11.18",
     "framer-motion": "^12.23.22",
@@ -26,6 +27,7 @@
     "next": "14.2.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-easy-crop": "^5.5.3",
     "react-hot-toast": "^2.6.0",
     "resend": "^6.1.2",
     "swr": "^2.3.6"

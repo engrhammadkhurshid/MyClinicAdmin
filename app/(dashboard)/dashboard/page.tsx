@@ -1,8 +1,9 @@
 import { createServerComponentClient } from '@/lib/supabase/server'
-import { DashboardKPIs, defaultKPIs } from '@/components/DashboardKPIs'
+import { DashboardKPIs } from '@/components/DashboardKPIs'
 import { QuickActions } from '@/components/QuickActions'
 import { RecentActivityFeed } from '@/components/RecentActivityFeed'
 import { AppointmentCalendar } from '@/components/AppointmentCalendar'
+import { PatientQueue } from '@/components/PatientQueue'
 import dayjs from 'dayjs'
 import { getCurrentPKT, toPKT } from '@/lib/timezone'
 
@@ -149,50 +150,92 @@ async function getDashboardData() {
     patient_id: apt.patients?.id || '',
   }))
 
+  // Get recent completed appointments (last 3 today)
+  const { data: recentCompleted } = await supabase
+    .from('appointments')
+    .select('id, patients(id, full_name), visit_type')
+    .eq('user_id', user.id)
+    .lt('appointment_date', nowPKT.toISOString())
+    .order('appointment_date', { ascending: false })
+    .limit(3)
+
+  // Get upcoming appointments (next 3)
+  const { data: upcomingQueue } = await supabase
+    .from('appointments')
+    .select('id, patients(id, full_name), visit_type')
+    .eq('user_id', user.id)
+    .gte('appointment_date', nowPKT.toISOString())
+    .order('appointment_date', { ascending: true })
+    .limit(3)
+
+  const recentPatients = (recentCompleted || []).map((apt: any) => ({
+    id: apt.patients?.id || '',
+    name: apt.patients?.full_name || 'Unknown',
+    visit_type: apt.visit_type,
+  }))
+
+  const upcomingPatients = (upcomingQueue || []).map((apt: any) => ({
+    id: apt.patients?.id || '',
+    name: apt.patients?.full_name || 'Unknown',
+    visit_type: apt.visit_type,
+  }))
+
   return {
     userName: userName,
     kpis: [
       {
-        ...defaultKPIs[0],
+        title: 'Total Patients',
         value: totalPatients || 0,
         change: 'Total registered patients',
+        icon: 'Users' as const,
+        color: 'bg-primary-500',
         trend: 'up' as const,
       },
       {
-        ...defaultKPIs[1],
+        title: 'Today\'s Appointments',
         value: appointmentsToday || 0,
         change: todayChange > 0 
           ? `+${todayChange} more than yesterday` 
           : todayChange < 0 
           ? `${Math.abs(todayChange)} less than yesterday`
           : 'Same as yesterday',
+        icon: 'Calendar' as const,
+        color: 'bg-green-500',
         trend: todayChange > 0 ? 'up' as const : todayChange < 0 ? 'down' as const : 'neutral' as const,
       },
       {
-        ...defaultKPIs[2],
+        title: 'Weekly Patients',
         value: weeklyPatients || 0,
         change: weeklyChange !== 0 
           ? `${weeklyChange > 0 ? '+' : ''}${weeklyChange}% from last week`
           : 'Same as last week',
+        icon: 'Activity' as const,
+        color: 'bg-blue-500',
         trend: weeklyChange > 0 ? 'up' as const : weeklyChange < 0 ? 'down' as const : 'neutral' as const,
       },
       {
-        ...defaultKPIs[3],
+        title: 'Monthly Visits',
         value: monthlyVisits || 0,
         change: monthlyChange !== 0
           ? `${monthlyChange > 0 ? '+' : ''}${monthlyChange}% from last month`
           : 'Same as last month',
+        icon: 'TrendingUp' as const,
+        color: 'bg-purple-500',
         trend: monthlyChange > 0 ? 'up' as const : monthlyChange < 0 ? 'down' as const : 'neutral' as const,
       },
       {
-        ...defaultKPIs[4],
+        title: 'Follow-ups Due',
         value: followUps?.length || 0,
         change: 'Patients requiring follow-up',
+        icon: 'Clock' as const,
+        color: 'bg-orange-500',
         trend: 'neutral' as const,
       },
     ],
     activities,
     appointments: formattedAppointments,
+    recentPatients,
+    upcomingPatients,
   }
 }
 
@@ -211,15 +254,23 @@ export default async function DashboardPage() {
         <p className="text-gray-600">Welcome back, {data.userName}! Here&apos;s your clinic overview</p>
       </div>
 
-      {/* KPIs with built-in heading */}
+      {/* KPIs */}
       <div className="mb-8">
         <DashboardKPIs kpis={data.kpis} />
       </div>
 
-      {/* Calendar View */}
+      {/* Patient Queue */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Appointments Calendar</h2>
-        <AppointmentCalendar appointments={data.appointments} />
+        <PatientQueue 
+          recentPatients={data.recentPatients} 
+          upcomingPatients={data.upcomingPatients} 
+        />
+      </div>
+
+      {/* Calendar View - Weekly */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">This Week</h2>
+        <AppointmentCalendar appointments={data.appointments} weeklyView={true} />
       </div>
 
       {/* Quick Actions */}
