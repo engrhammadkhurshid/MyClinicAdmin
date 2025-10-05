@@ -1,54 +1,55 @@
-# 🎯 FINAL FIX: Permission Denied Error
+# 🎯 FINAL FIX: RLS Policy for staff_members INSERT
 
-## The Error You Saw
+## The Error You're Seeing NOW
 ```
-Failed to create staff membership: permission denied for table users
+Failed to create staff membership: new row violates row-level security policy for table "staff_members"
 ```
 
 ## The Root Cause
-The `gen_staff_id()` trigger function needed to read from `auth.users` table to generate staff IDs, but didn't have permission to access the auth schema.
+The `gen_staff_id()` function permission is FIXED ✅, but now the **RLS INSERT policy** is missing for the `staff_members` table!
 
-## The Fix - Run This SQL NOW
+## The Complete Fix - Run This SQL NOW
 
 **Go to Supabase SQL Editor and run:**
 
 ```sql
--- Drop old function
-DROP TRIGGER IF EXISTS staff_members_gen_id ON public.staff_members;
-DROP FUNCTION IF EXISTS gen_staff_id() CASCADE;
+-- =====================================================
+-- COMPLETE RLS POLICIES FIX FOR SIGNUP
+-- =====================================================
 
--- Recreate with SECURITY DEFINER (allows access to auth.users)
-CREATE OR REPLACE FUNCTION gen_staff_id()
-RETURNS TRIGGER 
-SECURITY DEFINER
-SET search_path = public, auth
-AS $$
-DECLARE
-    clinic_slug TEXT;
-    username TEXT;
-    email_local TEXT;
-BEGIN
-    SELECT slug INTO clinic_slug 
-    FROM public.clinic 
-    WHERE id = NEW.clinic_id;
-    
-    SELECT email INTO email_local 
-    FROM auth.users 
-    WHERE id = NEW.user_id;
-    
-    username := split_part(email_local, '@', 1);
-    NEW.staff_id := clinic_slug || '-' || slugify(username);
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Enable RLS on all tables
+ALTER TABLE public.clinic ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.staff_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Recreate trigger
-CREATE TRIGGER staff_members_gen_id
-    BEFORE INSERT ON public.staff_members
-    FOR EACH ROW 
-    WHEN (NEW.staff_id = '' OR NEW.staff_id IS NULL)
-    EXECUTE FUNCTION gen_staff_id();
+-- Drop existing policies (avoid conflicts)
+DROP POLICY IF EXISTS "clinic_owner_insert" ON public.clinic;
+DROP POLICY IF EXISTS "clinic_owner_read" ON public.clinic;
+DROP POLICY IF EXISTS "staff_members_self_insert" ON public.staff_members;
+DROP POLICY IF EXISTS "staff_members_self_read" ON public.staff_members;
+DROP POLICY IF EXISTS "profiles_self_insert" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_self_read" ON public.profiles;
+
+-- CLINIC POLICIES
+CREATE POLICY "clinic_owner_insert" ON public.clinic
+    FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+CREATE POLICY "clinic_owner_read" ON public.clinic
+    FOR SELECT USING (auth.uid() = owner_id);
+
+-- STAFF_MEMBERS POLICIES (THE CRITICAL ONE!)
+CREATE POLICY "staff_members_self_insert" ON public.staff_members
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "staff_members_self_read" ON public.staff_members
+    FOR SELECT USING (user_id = auth.uid());
+
+-- PROFILES POLICIES
+CREATE POLICY "profiles_self_insert" ON public.profiles
+    FOR INSERT WITH CHECK (id = auth.uid());
+
+CREATE POLICY "profiles_self_read" ON public.profiles
+    FOR SELECT USING (id = auth.uid());
 ```
 
 ## Test Steps
@@ -80,12 +81,42 @@ CREATE TRIGGER staff_members_gen_id
 ```
 
 ## What You'll See
-- ✅ No "permission denied" error
+- ✅ No "row-level security policy" error
 - ✅ All 5 steps complete
 - 🎊 Confetti animation
-- 🚀 Auto-redirect to dashboard
+- 🚀 Auto-redirect to dashboard (2 seconds)
 - 🛡️ Team Management link in sidebar
 
 ---
 
-**Run the SQL fix and test now!** This is the final blocker! 🎯
+## 🔍 Why This Error Happened
+
+**Progress so far:**
+1. ✅ gen_staff_id() function permission FIXED (no more "permission denied for users")
+2. ❌ RLS INSERT policy missing for staff_members table
+
+**The signup creates data in this order:**
+- Step 2: INSERT into profiles ✅ (has profiles_self_insert policy)
+- Step 3: INSERT into clinic ✅ (has clinic_owner_insert policy)  
+- Step 4: INSERT into staff_members ❌ (MISSING staff_members_self_insert policy!)
+
+**Without the policy:**
+```
+Code tries: INSERT INTO staff_members (clinic_id, user_id, role, status)
+RLS checks: Does policy allow this INSERT?
+RLS finds: NO INSERT policy exists!
+Result: 403 Forbidden - "violates row-level security policy"
+```
+
+**With the policy:**
+```
+Code tries: INSERT INTO staff_members (clinic_id, user_id, role, status)
+RLS checks: Does policy allow this INSERT?
+RLS finds: staff_members_self_insert WITH CHECK (user_id = auth.uid())
+RLS validates: user_id matches auth.uid()? YES ✅
+Result: INSERT succeeds!
+```
+
+---
+
+**Run the SQL above and test now! This is the final piece!** 🎯
