@@ -214,7 +214,7 @@ export default function MultiStepSignupForm() {
       const { data, error} = await supabase.auth.verifyOtp({
         email: formData.email,
         token: formData.otp,
-        type: 'email'
+        type: 'signup'
       })
 
       if (error) throw error
