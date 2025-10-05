@@ -1,12 +1,12 @@
-# 🎯 FINAL FIX: RLS Policy for staff_members INSERT
+# 🎯 FINAL FIX: Infinite Recursion in RLS Policy
 
 ## The Error You're Seeing NOW
 ```
-Failed to create staff membership: new row violates row-level security policy for table "staff_members"
+Failed to create staff membership: infinite recursion detected in policy for relation "staff_members"
 ```
 
 ## The Root Cause
-The `gen_staff_id()` function permission is FIXED ✅, but now the **RLS INSERT policy** is missing for the `staff_members` table!
+The `staff_members_owner_read` RLS policy is querying the `staff_members` table **within its own USING clause**, causing infinite recursion!
 
 ## The Complete Fix - Run This SQL NOW
 
@@ -14,21 +14,19 @@ The `gen_staff_id()` function permission is FIXED ✅, but now the **RLS INSERT 
 
 ```sql
 -- =====================================================
--- COMPLETE RLS POLICIES FIX FOR SIGNUP
+-- FIX: Remove Recursive RLS Policy
 -- =====================================================
 
--- Enable RLS on all tables
-ALTER TABLE public.clinic ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.staff_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies (avoid conflicts)
+-- Drop ALL existing policies
 DROP POLICY IF EXISTS "clinic_owner_insert" ON public.clinic;
 DROP POLICY IF EXISTS "clinic_owner_read" ON public.clinic;
+DROP POLICY IF EXISTS "clinic_owner_update" ON public.clinic;
 DROP POLICY IF EXISTS "staff_members_self_insert" ON public.staff_members;
 DROP POLICY IF EXISTS "staff_members_self_read" ON public.staff_members;
+DROP POLICY IF EXISTS "staff_members_owner_read" ON public.staff_members;
 DROP POLICY IF EXISTS "profiles_self_insert" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_self_read" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_self_update" ON public.profiles;
 
 -- CLINIC POLICIES
 CREATE POLICY "clinic_owner_insert" ON public.clinic
@@ -37,7 +35,11 @@ CREATE POLICY "clinic_owner_insert" ON public.clinic
 CREATE POLICY "clinic_owner_read" ON public.clinic
     FOR SELECT USING (auth.uid() = owner_id);
 
--- STAFF_MEMBERS POLICIES (THE CRITICAL ONE!)
+CREATE POLICY "clinic_owner_update" ON public.clinic
+    FOR UPDATE USING (auth.uid() = owner_id)
+    WITH CHECK (auth.uid() = owner_id);
+
+-- STAFF_MEMBERS POLICIES (NO RECURSION!)
 CREATE POLICY "staff_members_self_insert" ON public.staff_members
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
@@ -50,6 +52,10 @@ CREATE POLICY "profiles_self_insert" ON public.profiles
 
 CREATE POLICY "profiles_self_read" ON public.profiles
     FOR SELECT USING (id = auth.uid());
+
+CREATE POLICY "profiles_self_update" ON public.profiles
+    FOR UPDATE USING (id = auth.uid())
+    WITH CHECK (id = auth.uid());
 ```
 
 ## Test Steps
@@ -81,7 +87,7 @@ CREATE POLICY "profiles_self_read" ON public.profiles
 ```
 
 ## What You'll See
-- ✅ No "row-level security policy" error
+- ✅ No "infinite recursion" error
 - ✅ All 5 steps complete
 - 🎊 Confetti animation
 - 🚀 Auto-redirect to dashboard (2 seconds)
@@ -89,34 +95,38 @@ CREATE POLICY "profiles_self_read" ON public.profiles
 
 ---
 
-## 🔍 Why This Error Happened
+## 🔍 Why Infinite Recursion Happened
 
-**Progress so far:**
-1. ✅ gen_staff_id() function permission FIXED (no more "permission denied for users")
-2. ❌ RLS INSERT policy missing for staff_members table
-
-**The signup creates data in this order:**
-- Step 2: INSERT into profiles ✅ (has profiles_self_insert policy)
-- Step 3: INSERT into clinic ✅ (has clinic_owner_insert policy)  
-- Step 4: INSERT into staff_members ❌ (MISSING staff_members_self_insert policy!)
-
-**Without the policy:**
-```
-Code tries: INSERT INTO staff_members (clinic_id, user_id, role, status)
-RLS checks: Does policy allow this INSERT?
-RLS finds: NO INSERT policy exists!
-Result: 403 Forbidden - "violates row-level security policy"
+**The problematic policy had a subquery:**
+```sql
+CREATE POLICY "staff_members_owner_read" ON staff_members
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM staff_members ...  -- 🔥 Queries same table!
+        )
+    );
 ```
 
-**With the policy:**
-```
-Code tries: INSERT INTO staff_members (clinic_id, user_id, role, status)
-RLS checks: Does policy allow this INSERT?
-RLS finds: staff_members_self_insert WITH CHECK (user_id = auth.uid())
-RLS validates: user_id matches auth.uid()? YES ✅
-Result: INSERT succeeds!
+**What happened:**
+1. Signup tries to INSERT into staff_members
+2. INSERT triggers SELECT to verify policy
+3. SELECT checks staff_members_owner_read policy  
+4. Policy runs SELECT FROM staff_members (same table!)
+5. That SELECT triggers the policy again
+6. Infinite loop! 🔄
+
+**The fix:**
+Use simple, direct checks - **NO subqueries on the same table!**
+
+```sql
+-- GOOD (no recursion):
+USING (user_id = auth.uid())  ✅
+
+-- BAD (causes recursion):
+USING (EXISTS (SELECT 1 FROM staff_members ...))  ❌
 ```
 
 ---
 
-**Run the SQL above and test now! This is the final piece!** 🎯
+**Run the SQL above and test now! This removes the recursive policy!** 🎯
